@@ -1,0 +1,5 @@
+
+namespace timer
+{
+    void init();
+}
