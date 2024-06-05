@@ -6,6 +6,7 @@ section .asm
 global putchar: function
 global getchar: function
 
+
 ; int getchar();
 getchar:
     push ebp 
@@ -14,6 +15,7 @@ getchar:
     int 0x80 
     pop ebp 
     ret
+
 
 ; void putchar(char c);
 putchar:
@@ -36,6 +38,7 @@ global fseek: function
 global fstat: function
 global fclose: function 
 
+
 ; int fopen(const char* filename, const char* mode);
 fopen:
     push ebp
@@ -47,6 +50,7 @@ fopen:
     add esp, 8
     pop ebp
     ret
+
 
 ; int fread(void* ptr, uint32_t block_size, uint32_t block_count, int fd);
 fread:
@@ -62,6 +66,7 @@ fread:
     pop ebp
     ret
 
+
 ; int fseek(int fd, int offset, file_seek_mode_t whence); 
 fseek:
     push ebp
@@ -75,6 +80,7 @@ fseek:
     pop ebp
     ret
 
+
 ; int fstat(int fd, file_stat_t* stat);
 fstat:
     push ebp
@@ -86,6 +92,7 @@ fstat:
     add esp, 8
     pop ebp
     ret
+
 
 ; int fclose(int fd);
 fclose:

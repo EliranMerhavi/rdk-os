@@ -14,6 +14,6 @@ void timer::init()
 
 void timer::irq_handler(interrupt_frame_t* frame)
 {
-    // REMINDER: there will always be next task (because the shell is run infinitely)
-//    task::_switch(task::next());
+    // NOTE: there will always be next task (because the shell is running infinitely)
+    // task::_switch(task::next());
 }

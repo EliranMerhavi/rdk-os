@@ -82,9 +82,8 @@ int elf32::validate(elf32::elf_header_t *header)
 int elf32::load(const char *filename, elf32::file_t *res)
 {
     int fd = fopen(filename, "r");
-
-    if (!fd)
-    {
+    
+    if (!fd) {
         return ERROR(EIO);
     }
 

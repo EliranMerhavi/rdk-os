@@ -4,7 +4,6 @@
 #include "memory.h"
 #include "os/terminal/terminal.h"
 
-
 void* systemcall_print(interrupt_frame_t* frame)
 {
     void* buffer = task::get_stack_item(task::current(), 0);

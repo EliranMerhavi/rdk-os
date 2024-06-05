@@ -1,2 +1,3 @@
-* implement systemcall_system
-* add installing apt dependecies to setup.sh
+* implement systemcall_system                   | DONE
+* add installing apt dependecies to setup.sh    | 
+* finish process termination                    | 

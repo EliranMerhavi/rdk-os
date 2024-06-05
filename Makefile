@@ -40,7 +40,10 @@ $(bin)/$(target): $(bins) user_programs
 	@sudo mkdir ./mnt/drive0/testing
 	@echo "hello in folder" | sudo tee ./mnt/drive0/testing/hello.txt > /dev/null
 	@echo "hello " 			| sudo tee ./mnt/drive0/hello.txt 		  > /dev/null
-	@sudo cp $(src)/programs/shell/bin/shell.elf ./mnt/drive0 
+	
+	@sudo cp $(src)/programs/shell/bin/shell.elf ./mnt/drive0
+	@sudo cp $(src)/programs/commands/*/bin/*.elf ./mnt/drive0
+	ls ./mnt/drive0 
 	@sudo umount ./mnt/drive0
 
 
@@ -128,12 +131,12 @@ $(obj)/%.asm.o: $(src)/os/*/*/*/*/%.asm
 user_programs:
 	cd $(src)/programs/stdlib/ && make
 	cd $(src)/programs/shell/ && make 
-
+	cd $(src)/programs/commands/dummy && make
 
 user_programs_clean:
 	cd $(src)/programs/stdlib/ && make clean
 	cd $(src)/programs/shell/ && make clean 
-
+	cd $(src)/programs/commands/dummy && make clean
 
 clean: user_programs_clean
 	rm -rf $(bin)/*

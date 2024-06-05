@@ -39,7 +39,9 @@ void task::run_first()
     }
 
     task::_switch(s_head);
-    return_task(&s_head->registers);
+    task::_return(s_head);
+
+    terminal::printf("task::run_first(): end\n");
 }
 
 int task::_switch(task_t *task)
@@ -49,6 +51,12 @@ int task::_switch(task_t *task)
     s_current = task;
     paging::switch_directory(task->page_directory);
     return 0;
+}
+
+void task::_return(task_t* task) 
+{
+    return_task(&task->registers);
+    terminal::printf("task::_return(): end\n");
 }
 
 int task::switch_to_task_page(task::task_t* task) 
@@ -63,15 +71,18 @@ task::task_t* task::current()
     return s_current;
 }
 
+bool task::has_next() 
+{
+    return s_current != nullptr;
+}
+
 task::task_t* task::next()
 {
-    task::task_t* current_task = task::current();
-
-    if (!current_task) {
+    if (!s_current->next) {
         return s_head;
     }
 
-    return current_task->next;
+    return s_current->next;
 }
 
 void task::save_current(interrupt_frame_t* frame)
@@ -146,7 +157,7 @@ task::task_t* task::create(process::process_id_t pid)
     task->page_directory = paging::new_four_gb_directory(PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL);
 
     if (!task->page_directory) {
-        kfree(task);
+        task::free(task);
         return (task::task_t*)ERROR(EIO);
     }
     
@@ -159,17 +170,20 @@ task::task_t* task::create(process::process_id_t pid)
     task->pid       = pid;
 
     if (s_head == nullptr) {
-        s_current = s_head = s_tail = task;
-        return s_tail;
+        s_current = task;
+        s_head = task;
+        s_tail = task;
+    }
+    else {
+        s_tail->next = task;
+        task->prev = s_tail;
+        s_tail = task;
     }
     
-    s_tail->next = task;
-    task->prev = s_tail;
-    s_tail = task;
     return s_tail;
 }
 
-void task::free(task::task_t* task)  
+void task::free(task::task_t* task)
 {
     paging::free(task->page_directory);
     task::remove(task);
@@ -178,17 +192,25 @@ void task::free(task::task_t* task)
 
 void task::remove(task_t *task)
 {
+    if (task == task->next) {
+        s_head = s_tail = s_current = nullptr;
+        return;
+    }
+
     if (task->prev) {
         task->prev->next = task->next;
     }
-    else if (task == s_head) {
+    
+    if (task == s_head) {
         s_head = task->next;
     }
-    else if (task == s_tail) {
+    
+    if (task == s_tail) {
         s_tail = task->prev;
     }
-    else if (task == s_current){
-        s_current = task->next ? task->next : s_head;
+
+    if (task == s_current){
+        s_current = task::next();
     }
 }
 

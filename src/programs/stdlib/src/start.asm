@@ -2,12 +2,13 @@
 
 global _start 
 extern c_start
+extern exit
 global get_args: function
-
 
 section .asm
 _start:
     call c_start
+    call exit
     ret
 
 ; arguments_t* get_args();

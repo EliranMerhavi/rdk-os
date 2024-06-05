@@ -16,5 +16,8 @@ void debug::init()
 
 void debug::isr_handler(interrupt_frame_t* frame)
 {
-    terminal::printf("eax: %x\n", frame->eax);    
+    terminal::printf("eax: %x\n", frame->eax);
+    terminal::printf("ss: %x\n", frame->ss);
+    terminal::printf("cs: %x\n", frame->cs);
+        
 }

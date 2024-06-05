@@ -18,6 +18,9 @@
 #include "../loader/formats/elfloader.h"
 #include "../loader/formats/elf.h"
 
+#define NO_NEXT_PROCESS MAX_PROCESSES
+
+
 /*
     using load_function_t = int(*)(const char* filename, process::process_t* _process);
     using map_memory_t    = int(*)(process:process_t* _process);
@@ -54,6 +57,8 @@ namespace process
 
     void keyboard_listener(const keyboard::event_t& event);
     int load_at(const char* filename, system_arguments_t* args, int slot);
+    
+    int free_program_data(process::process_id_t pid);
 }
 
 process::process_t::process_t() 
@@ -117,7 +122,7 @@ process::process_id_t process::next()
         ;
     
     if (res == MAX_PROCESSES)
-        return -1;
+        return NO_NEXT_PROCESS;
 
     return res;
 }
@@ -215,10 +220,10 @@ process::process_id_t process::load(const char* filename, system_arguments_t* ar
         return ERROR(EISTKN);
     
     int res = process::load_at(filename, args, slot);
-
+        
     if (IS_ERROR(res))
         return res;
-
+    
     return slot;
 }
 
@@ -251,6 +256,7 @@ int process::load_binary(const char* filename, process::process_t* _process)
     
     file_stat_t stat;
     res = fstat(fd, &stat);
+
     if (IS_ERROR(res)) {
         fclose(fd);
         return res;
@@ -281,8 +287,10 @@ int process::load_data(const char* filename, process::process_t* _process)
 {
     int res = 0;
     res = process::load_elf(filename, _process);
+
     if (!IS_ERROR(res))
         return res;
+    
     res = process::load_binary(filename, _process);
 
     return res;
@@ -291,7 +299,7 @@ int process::load_data(const char* filename, process::process_t* _process)
 int process::map_memory_elf(process::process_t* _process)
 {
     int res = 0;
-   
+
     elf32::file_t elf_file = _process->elf_file;   
     elf32::elf_header_t* header = elf_file.header();
  
@@ -373,22 +381,23 @@ int process::load_at(const char* filename, system_arguments_t* args, int slot)
     task::task_t* _task = nullptr;
     
     process_t& _process = s_processes[slot];
-
+    
     if (slot < 0 || slot >= MAX_PROCESSES) 
         return ERROR(EINVARG);
     
     if (s_is_taken[slot]) {
         return ERROR(EISTKN);
     }
-
+    
     memset(&_process, 0, sizeof(_process));
     res = process::load_data(filename, &_process);
-    
+ 
     if (IS_ERROR(res)) {
         return res;
-    }
+    }    
     
     _process.stack_ptr = kzalloc(USER_PROGRAM_STACK_SIZE);
+
     if (!_process.stack_ptr) {
         return ERROR(ENOMEM);    
     }
@@ -418,12 +427,35 @@ int process::load_at(const char* filename, system_arguments_t* args, int slot)
             _process.args.argv[i] = args->argv[i];
         }
     }
-     
+    else {
+        /* create empty args */
+    } 
+
     _process.keyboard = circular_queue_t<char, KEYBOARD_BUFFER_SIZE>();
     
     s_is_taken[slot] = true;
     
     return 0;
+}
+
+int process::free_program_data(process::process_id_t pid)
+{
+    int res = 0;
+    process::process_t* _process = process::get(pid);
+
+    switch(_process->file_type)
+    {
+        case file_type_t::BINARY:
+            kfree(_process->program_ptr);
+            break;
+        case file_type_t::ELF:
+            elf32::close(&_process->elf_file);
+            break;
+        default:
+            res = -EINVARG;
+    }
+
+    return res;
 }
 
 void process::terminate(process::process_id_t pid)
@@ -434,17 +466,20 @@ void process::terminate(process::process_id_t pid)
         process::free(pid, _process->allocations[i].address);
     }
 
-    /*
-        process_free_program_data(pid)
-        TODO: implement in the new way
-    */
+    int res = process::free_program_data(pid);
+
+    if (IS_ERROR(res)) {
+        return;
+    }
 
     kfree(_process->stack_ptr);
     task::free(_process->task);
 
     s_is_taken[pid] = false;
     
-    if (s_current == pid) {
-        process::_switch(process::next());
+    process::process_id_t pid_next = process::next();
+
+    if (s_current == pid && pid_next != NO_NEXT_PROCESS) {       
+        process::_switch(pid_next);
     }
 }

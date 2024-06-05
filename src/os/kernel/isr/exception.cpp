@@ -18,10 +18,6 @@ void exception::init()
 
 void exception::exception_handler(interrupt_frame_t* frame)
 { 
-    process::terminate(task::current()->pid);
-    task::_switch(task::next());
-    return;
-
     switch (frame->interrupt_number) {
     case 0:
         terminal::print("INTERRUPT EXCEPTION: division by zero #DE\n");
@@ -98,8 +94,12 @@ void exception::exception_handler(interrupt_frame_t* frame)
     default:
         terminal::print("INTERRUPT EXCEPTION: unhandled exception");
     }
-
-
+    
+    if (task::current()) {
+        process::terminate(task::current()->pid);
+        if (task::has_next())
+            task::_switch(task::next());
+    }
 
     terminal::print("halting...");
     __asm__ ("cli; hlt;");

@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include "status.h"
 
-
+#define MAX_LINE 1024
 #define MAX_PATH 108
 #define MAX_ARGS     128
 #define MAX_ARG_SIZE 108

@@ -57,7 +57,9 @@ void kernel_main()
     debug::init();
 
     process::process_id_t pid = process::load("0:/shell.elf", nullptr);
-    
+
+    //process::process_id_t pid = process::load("0:/shell.elf", nullptr);
+
     if (IS_ERROR(pid)) { 
         terminal::printf("error: %d", pid);
         panic("failed to load 0:/shell.elf");

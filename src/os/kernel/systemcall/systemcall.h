@@ -9,9 +9,9 @@ enum system_commands
     system_malloc   = 0x20,
     system_free     = 0x21,
     system_system   = 0x22,
-    // stdio system commands
-    system_exit     = 0x11,
+    system_exit     = 0x23,
 
+    // stdio system commands
     system_getchar  = 0x30,
     system_putchar  = 0x31,
 
@@ -31,4 +31,3 @@ namespace systemcall
     void init();
     void _register(int command_id, systemcall_handler_t call);
 }
-
