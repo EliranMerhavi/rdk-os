@@ -1,4 +1,4 @@
-target=dummy.elf
+target=dummy
 stdlib=../../stdlib/bin/stdlib.elf
 includes= -I./src -I../../stdlib/src/
 

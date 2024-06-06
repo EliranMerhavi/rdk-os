@@ -43,9 +43,9 @@ global fclose: function
 fopen:
     push ebp
     mov ebp, esp
-    push dword [ebp+8]  ;
-    push dword [ebp+12] ;
-    mov eax, 0xf1       ; fopen command
+    push dword [ebp+12] ; push const char* filename
+    push dword [ebp+8]  ; push const char* mode
+    mov eax, 0xf0       ; fopen command
     int 0x80
     add esp, 8
     pop ebp
@@ -56,11 +56,11 @@ fopen:
 fread:
     push ebp
     mov ebp, esp
-    push dword [ebp+8]
-    push dword [ebp+12]
-    push dword [ebp+16]
-    push dword [ebp+20]
-    mov eax, 0xf2       ; fread command
+    push dword [ebp+20] ; push void* ptr
+    push dword [ebp+16] ; push uint32_t block_size
+    push dword [ebp+12] ; push uint32_t block_count
+    push dword [ebp+8]  ; push int fd
+    mov eax, 0xf1       ; fread command
     int 0x80
     add esp, 16
     pop ebp
@@ -71,10 +71,10 @@ fread:
 fseek:
     push ebp
     mov ebp, esp
-    push dword [ebp+8] ;
-    push dword [ebp+8] ;
-    push dword [ebp+8] ;
-    mov eax, 0xf3      ; fseek command
+    push dword [ebp+16] ; push int fd
+    push dword [ebp+12] ; push int offset
+    push dword [ebp+8]  ; push file_seek_mode_t whence
+    mov eax, 0xf2       ; fseek command
     int 0x80
     add esp, 4
     pop ebp
@@ -85,9 +85,9 @@ fseek:
 fstat:
     push ebp
     mov ebp, esp
-    push dword [ebp+8]  ;
-    push dword [ebp+12] ;
-    mov eax, 0xf4      ; fstat command
+    push dword [ebp+12] ; push file_stat* stat
+    push dword [ebp+8]  ; push int fd
+    mov eax, 0xf3       ; fstat command
     int 0x80
     add esp, 8
     pop ebp
@@ -99,7 +99,7 @@ fclose:
     push ebp
     mov ebp, esp
     push dword [ebp+8] ; push int fd
-    mov eax, 0xf5      ; fclose command
+    mov eax, 0xf4      ; fclose command
     int 0x80
     add esp, 4
     pop ebp

@@ -27,23 +27,42 @@ void* systemcall_free(interrupt_frame_t* frame)
 
 void* systemcall_system(interrupt_frame_t* frame)
 {
-    void* command = (void*)task::get_stack_item(task::current(), 0);
-    static char kernel_buffer[MAX_LINE];
+    void* line = (void*)task::get_stack_item(task::current(), 0);
+    static char kernel_line[MAX_LINE + 3];
+    
+    memset(kernel_line, 0, sizeof(kernel_line));
 
-    memset(kernel_buffer, 0, sizeof(kernel_buffer));
-    
-    kernel_buffer[0] = '0';
-    kernel_buffer[1] = ':';
-    kernel_buffer[2] = '/';
-    
-    task::copy_string_from(task::current(), command, kernel_buffer + 3, sizeof(kernel_buffer));
-    
-    //system_arguments_t args;
-    const char* filename = kernel_buffer;
-    terminal::printf("%s\n", filename);
-    
-    process::process_id_t pid = process::load(filename, nullptr);
-    
+    task::read(task::current(), line, kernel_line + 3, sizeof(kernel_line) - 3);
+
+    kernel_line[0] = '0';
+    kernel_line[1] = ':';
+    kernel_line[2] = '/';
+
+    char arguemnt[MAX_ARG_SIZE + 1];
+
+    process::arguments_t args;
+
+    char* it1 = kernel_line;  
+
+    while (*it1) {
+        memset(arguemnt, 0, sizeof(arguemnt));
+        char* it2 = arguemnt;
+
+        while (*it1 && *it1 != ' ') {
+            *it2     = *it1;
+            it2++;
+            it1++;
+        }
+
+        *it2 ='\0';
+        args.add(arguemnt);
+
+        while (*it1 == ' ')
+            it1++;
+    }
+        
+    process::process_id_t pid = process::load(args);
+   
     if (IS_ERROR(pid)) { 
         return (void*)pid;
     }
@@ -58,14 +77,12 @@ void* systemcall_system(interrupt_frame_t* frame)
 
 void* systemcall_exit(interrupt_frame_t* frame)
 {
-    terminal::printf("exit() called on %s\n", process::get(task::current()->pid)->filename);
-    
     process::terminate(task::current()->pid);
 
     if (task::has_next()) {
         task::_switch(task::next());
+        task::_return(task::next());
     }
         
- 
     return 0;
 }

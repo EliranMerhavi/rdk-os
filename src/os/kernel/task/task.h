@@ -40,7 +40,7 @@ namespace task
     void save_current(interrupt_frame_t* frame);
     
     task_t* create(process::process_id_t p);
-    int     copy_string_from(task::task_t* task, void* virtual_addr, void* physical_addr, int _max);
+    int     read(task::task_t* task, void* virtual_addr, void* physical_addr, int _max);
     void*   get_stack_item(task::task_t* task, int index);
     int     _switch(task_t* task);
     void    _return(task_t* task);

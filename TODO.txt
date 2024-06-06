@@ -1,3 +1,6 @@
 * implement systemcall_system                   | DONE
-* add installing apt dependecies to setup.sh    | 
-* finish process termination                    | 
+* add installing apt dependecies to setup.sh    |   
+* finish process termination                    | DONE 
+* implement printf                              | DONE
+* finish file interrupts                        | 
+* finish arguments for procesess                | DONE

@@ -8,9 +8,6 @@ global return_task
 
 ; void return_task(task::registers_t* user_registers);
 return_task:
-    pop eax 
-    push eax 
-    int 0x79
     mov ebp, esp
     
     ; 0x103a53
@@ -62,8 +59,8 @@ restore_general_purpose_registers:
     mov ecx, [ebx + 20] ; ecx = registers->ecx
     mov eax, [ebx + 24] ; eax = registers->eax
     mov ebx, [ebx + 12] ; ebx = registers->ebx
-
-    pop ebp 
+    
+    add esp, 4 
     ret
 
 

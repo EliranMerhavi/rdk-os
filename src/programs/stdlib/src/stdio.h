@@ -28,6 +28,7 @@ typedef struct
     uint32_t filesize;
 } file_stat_t;
 
+int printf(const char* format, ...);
 int putchar(char c);
 int getchar();
 

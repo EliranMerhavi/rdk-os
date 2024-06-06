@@ -56,7 +56,7 @@ namespace process
     int map_memory_elf(process::process_t* _process);
 
     void keyboard_listener(const keyboard::event_t& event);
-    int load_at(const char* filename, system_arguments_t* args, int slot);
+    int load_at(const process::arguments_t& args, int slot);
     
     int free_program_data(process::process_id_t pid);
 }
@@ -209,7 +209,7 @@ process::process_t* process::get(process::process_id_t pid)
     return &s_processes[index];
 }
 
-process::process_id_t process::load(const char* filename, system_arguments_t* args)
+process::process_id_t process::load(const process::arguments_t& args)
 {
     int slot;
 
@@ -219,7 +219,7 @@ process::process_id_t process::load(const char* filename, system_arguments_t* ar
     if (slot == MAX_PROCESSES)
         return ERROR(EISTKN);
     
-    int res = process::load_at(filename, args, slot);
+    int res = process::load_at(args, slot);
         
     if (IS_ERROR(res))
         return res;
@@ -249,11 +249,12 @@ int process::load_binary(const char* filename, process::process_t* _process)
     int res = 0;
 
     int fd = fopen(filename, "r");
-
+    
     if (!fd) {
         return ERROR(EIO);
     }
     
+
     file_stat_t stat;
     res = fstat(fd, &stat);
 
@@ -285,6 +286,7 @@ int process::load_binary(const char* filename, process::process_t* _process)
 
 int process::load_data(const char* filename, process::process_t* _process)
 {
+    
     int res = 0;
     res = process::load_elf(filename, _process);
 
@@ -362,7 +364,7 @@ int process::map_memory(process::process_t* _process)
         return res;
     }
 
-    // mapping stack
+    // mapping the stack
 
     res = paging::map_to(
         _process->task->page_directory,
@@ -375,7 +377,7 @@ int process::map_memory(process::process_t* _process)
     return res;
 }
 
-int process::load_at(const char* filename, system_arguments_t* args, int slot) 
+int process::load_at(const process::arguments_t& args, int slot) 
 {
     int res;
     task::task_t* _task = nullptr;
@@ -385,32 +387,29 @@ int process::load_at(const char* filename, system_arguments_t* args, int slot)
     if (slot < 0 || slot >= MAX_PROCESSES) 
         return ERROR(EINVARG);
     
-    if (s_is_taken[slot]) {
+    if (s_is_taken[slot])
         return ERROR(EISTKN);
-    }
     
     memset(&_process, 0, sizeof(_process));
-    res = process::load_data(filename, &_process);
- 
-    if (IS_ERROR(res)) {
+    
+    res = process::load_data(args.filename(), &_process);
+    
+    if (IS_ERROR(res))
         return res;
-    }    
     
     _process.stack_ptr = kzalloc(USER_PROGRAM_STACK_SIZE);
 
-    if (!_process.stack_ptr) {
+    if (!_process.stack_ptr)
         return ERROR(ENOMEM);    
-    }
 
-    strncpy(_process.filename, filename, sizeof(_process.filename));
+    strncpy(_process.filename, args.filename(), sizeof(_process.filename));
     
     _process.id = slot;
 
     _task = task::create(_process.id);
 
-    if (IS_ERROR(_task)) {
+    if (IS_ERROR(_task))
         return ERROR((uint32_t)_task);
-    }
     
     _process.task = _task;
     res = process::map_memory(&_process);
@@ -419,22 +418,12 @@ int process::load_at(const char* filename, system_arguments_t* args, int slot)
         task::free(_task);
         return res;
     }
-    
-    if (args) {
-        _process.args.argc = args->argc;
-    
-        for (int i = 0; i < args->argc; i++) {
-            _process.args.argv[i] = args->argv[i];
-        }
-    }
-    else {
-        /* create empty args */
-    } 
 
+    memcpy(&_process.args, &args, sizeof(args));
     _process.keyboard = circular_queue_t<char, KEYBOARD_BUFFER_SIZE>();
     
     s_is_taken[slot] = true;
-    
+
     return 0;
 }
 
@@ -466,17 +455,16 @@ void process::terminate(process::process_id_t pid)
         process::free(pid, _process->allocations[i].address);
     }
 
-    int res = process::free_program_data(pid);
-
-    if (IS_ERROR(res)) {
-        return;
-    }
+    process::free_program_data(pid);
 
     kfree(_process->stack_ptr);
     task::free(_process->task);
 
-    s_is_taken[pid] = false;
     
+    _process->args.on_process_terminate();
+    
+    s_is_taken[pid] = false;
+
     process::process_id_t pid_next = process::next();
 
     if (s_current == pid && pid_next != NO_NEXT_PROCESS) {       

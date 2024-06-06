@@ -15,11 +15,11 @@ enum system_commands
     system_getchar  = 0x30,
     system_putchar  = 0x31,
 
-    system_fopen    = 0xf2,
-    system_fread    = 0xf3,
-    system_fseek    = 0xf4,
-    system_fstat    = 0xf5,
-    system_fclose   = 0xf6,
+    system_fopen    = 0xf0,
+    system_fread    = 0xf1,
+    system_fseek    = 0xf2,
+    system_fstat    = 0xf3,
+    system_fclose   = 0xf4,
 };
 
 struct interrupt_frame_t;

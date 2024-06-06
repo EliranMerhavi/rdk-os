@@ -40,23 +40,23 @@ void task::run_first()
 
     task::_switch(s_head);
     task::_return(s_head);
-
-    terminal::printf("task::run_first(): end\n");
 }
 
 int task::_switch(task_t *task)
 {
     if (!task)
         return ERROR(EINVARG);
+    
     s_current = task;
+    
     paging::switch_directory(task->page_directory);
+    
     return 0;
 }
 
 void task::_return(task_t* task) 
 {
     return_task(&task->registers);
-    terminal::printf("task::_return(): end\n");
 }
 
 int task::switch_to_task_page(task::task_t* task) 
@@ -106,7 +106,7 @@ void task::save_current(interrupt_frame_t* frame)
     task->registers.esi   = frame->esi;
 }
 
-int task::copy_string_from(task::task_t* task, void* virtual_addr, void* physical_addr, int _max)
+int task::read(task::task_t* task, void* virtual_addr, void* physical_addr, int _max)
 {
     if (_max >= PAGING_PAGE_SIZE) {
         return ERROR(EINVARG); 
@@ -163,6 +163,7 @@ task::task_t* task::create(process::process_id_t pid)
     
     process::process_t* _process = process::get(pid);
 
+    task->prev = task->next = nullptr;
     task->registers.eip = (_process->file_type == process::file_type_t::BINARY) ? PROGRAM_VIRTUAL_ADDRESS : _process->elf_file.header()->e_entry; 
     task->registers.ss  = GDT_USER_DATA_SEGMENT;
     task->registers.cs  = GDT_USER_CODE_SEGMENT;
@@ -179,7 +180,7 @@ task::task_t* task::create(process::process_id_t pid)
         task->prev = s_tail;
         s_tail = task;
     }
-    
+
     return s_tail;
 }
 
@@ -192,7 +193,7 @@ void task::free(task::task_t* task)
 
 void task::remove(task_t *task)
 {
-    if (task == task->next) {
+    if (s_head == s_tail) {
         s_head = s_tail = s_current = nullptr;
         return;
     }

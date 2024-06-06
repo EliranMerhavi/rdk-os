@@ -9,6 +9,7 @@ section .asm
 _start:
     call c_start
     call exit
+    int 0x79
     ret
 
 ; arguments_t* get_args();

@@ -56,18 +56,15 @@ void kernel_main()
     process::init();
     debug::init();
 
-    process::process_id_t pid = process::load("0:/shell.elf", nullptr);
-
-    //process::process_id_t pid = process::load("0:/shell.elf", nullptr);
+    process::process_id_t pid = process::load("0:/shell");
 
     if (IS_ERROR(pid)) { 
-        terminal::printf("error: %d", pid);
-        panic("failed to load 0:/shell.elf");
+        terminal::printf("error: %d\n", pid);
+        panic("failed to load 0:/shell");
     }
 
     process::_switch(pid); 
     task::run_first();
-    terminal::printf("kernel_main() ends\n");
     // end testing section
 }
 

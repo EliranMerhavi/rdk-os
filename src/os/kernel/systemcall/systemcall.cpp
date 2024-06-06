@@ -83,5 +83,5 @@ void systemcall::isr_handler(interrupt_frame_t* frame)
 
 void* systemcall_get_args(interrupt_frame_t* frame) {
     process::process_t* _process = process::get(task::current()->pid);
-    return (void*)&_process->args;
+    return (void*)_process->args.c_arguments();
 }

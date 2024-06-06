@@ -7,23 +7,15 @@
 #include "../../ds/circular_queue.h"
 #include "../loader/formats/elfloader.h"
 
-#define KEYBOARD_BUFFER_EMPTY 127
+#include "arguments.h"
 
-struct system_arguments_t {
-    int  argc;
-    char argv[MAX_ARGS][MAX_ARG_SIZE];
-};
+#define KEYBOARD_BUFFER_EMPTY 127
 
 namespace process
 {
     enum file_type_t {
         ELF,
         BINARY
-    };
-
-    struct arguments_t {
-        int argc;
-        char **argv;
     };
 
     struct allocation_data_t 
@@ -60,13 +52,12 @@ namespace process
         task::task_t* task;
         allocation_data_t allocations[PROGRAM_MAX_ALLOCATIONS];
         circular_queue_t<char, KEYBOARD_BUFFER_SIZE> keyboard;
-
         arguments_t args;
     };
 
     void init();
 
-    process_id_t load(const char* filename, system_arguments_t* args);
+    process_id_t load(const process::arguments_t& args);
     process_id_t current();
 
     int _switch(process_id_t pid);

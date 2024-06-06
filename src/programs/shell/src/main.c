@@ -10,34 +10,28 @@ struct {
     bool output_while_typing;
 } config;
 
-char line[MAX_LINE];
+static char line[MAX_LINE];
 
 void readline(char* line);
 
 int main(int argc, char** argv)
 {
-    int status;
+    //int status;
 
     config.output_while_typing = true; 
 
     do {
-        print(">");
-        memset(line, 0, sizeof(line));
+        printf(">");
         readline(line);
-        
-        status = system(line);
-        print("status: ");
-        print(itoa(status));
-        print("\n");
-        /*
-            handle status
-         */
+        system(line);
+        // TODO: handle status
     } while (true);
-    print("end\n");
+
     return 0;
 }
 
 void readline(char* line) {
+    memset(line, 0, sizeof(line));
     int i = 0; 
     int count = 0;
 
@@ -58,8 +52,6 @@ void readline(char* line) {
         if (key == '\b' && i >= 1) {
             line[i - 1] = '\0';
             i -= 2;
-            if (count == 0)
-                print(itoa(count));
             continue;
         }
 

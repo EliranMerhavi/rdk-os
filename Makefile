@@ -36,14 +36,16 @@ $(bin)/$(target): $(bins) user_programs
 	dd if=$(bin)/boot.bin >> $@
 	dd if=$(bin)/kernel.bin >> $@
 	dd if=/dev/zero bs=1048576 count=16 >> $@
-	sudo mount -t vfat $@ ./mnt/drive0
-	@sudo mkdir ./mnt/drive0/testing
-	@echo "hello in folder" | sudo tee ./mnt/drive0/testing/hello.txt > /dev/null
-	@echo "hello " 			| sudo tee ./mnt/drive0/hello.txt 		  > /dev/null
 	
-	@sudo cp $(src)/programs/shell/bin/shell.elf ./mnt/drive0
-	@sudo cp $(src)/programs/commands/*/bin/*.elf ./mnt/drive0
-	ls ./mnt/drive0 
+	sudo mount -t vfat $@ ./mnt/drive0
+
+	@echo "hello world" | sudo tee ./mnt/drive0/hello.txt > /dev/null
+
+	@sudo cp $(src)/programs/shell/bin/shell ./mnt/drive0
+	@sudo cp $(src)/programs/commands/*/bin/* ./mnt/drive0
+	
+	@echo directory layout:
+	@ls ./mnt/drive0 
 	@sudo umount ./mnt/drive0
 
 
@@ -128,25 +130,30 @@ $(obj)/%.asm.o: $(src)/os/*/*/*/*/%.asm
 	@nasm -f elf -g $< -o $@
 
 
+commands = $(addprefix $(src)/programs/commands/, $(shell ls $(src)/programs/commands/))
+
 user_programs:
-	cd $(src)/programs/stdlib/ && make
-	cd $(src)/programs/shell/ && make 
-	cd $(src)/programs/commands/dummy && make
+	make -C $(src)/programs/stdlib/
+	make -C $(src)/programs/shell/ 
+	  
+	@$(foreach command_dir, $(commands), make -C $(command_dir);)
 
 user_programs_clean:
-	cd $(src)/programs/stdlib/ && make clean
-	cd $(src)/programs/shell/ && make clean 
-	cd $(src)/programs/commands/dummy && make clean
+	make clean -C $(src)/programs/stdlib/
+	make clean -C $(src)/programs/shell/  
+	
+	@$(foreach command_dir, $(commands), make clean -C $(command_dir);)
 
 clean: user_programs_clean
 	rm -rf $(bin)/*
 	rm -rf $(obj)/*
 
 
-print_objects:
-	@echo $(lib_objects)
-	@echo $(os_objects)
-
+print_info:
+	@#echo $(lib_objects)
+	@#echo $(os_objects)
+	@#echo $(commands)
+	
 
 run:
 	qemu-system-x86_64 -drive file=$(bin)/$(target),format=raw,index=0,media=disk

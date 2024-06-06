@@ -1,12 +1,15 @@
 #include "stdio.h"
 #include "string.h"
+#include "rdk_os.h"
 
 int main(int argc, char** argv)
 {
+    print("(echo not working for now)\n");
+    return 0;
     char str[MAX_LINE + 1];
     int pos = 0;
 
-    for (int i = 0; i < argc && pos < MAX_LINE; i++) {
+    for (int i = 1; i < argc && pos < MAX_LINE; i++) {
         const char* word = argv[i];
         int j = 0;
 
@@ -19,7 +22,10 @@ int main(int argc, char** argv)
 
     str[pos] = '\0';
 
-    printf("%s\n", str);
+    print(str);
+    print("\n");
+    
+    //printf("%s\n", str);
     
     return 0;
 }
